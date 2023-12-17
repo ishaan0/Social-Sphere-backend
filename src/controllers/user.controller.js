@@ -8,7 +8,7 @@ const registerUser = asyncHandler(async (req, res) => {
 	const { username, email, fullname, password } = req.body;
 
 	if (
-		[fullName, email, username, password].some(field => field?.trim() === "")
+		[fullname, email, username, password].some(field => field?.trim() === "")
 	) {
 		throw new ApiError(400, "All fields are required");
 	}
@@ -44,7 +44,7 @@ const registerUser = asyncHandler(async (req, res) => {
 	}
 
 	const user = await User.create({
-		fullName,
+		fullname,
 		avatar: avatar.url,
 		coverImage: coverImage?.url || "",
 		email,
@@ -68,7 +68,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
 	const { email, username, password } = req.body;
 
-	if (!(username || email))
+	if (!username && !email)
 		throw new ApiError(400, "username or email is required");
 
 	const user = await User.findOne({
@@ -85,7 +85,9 @@ const loginUser = asyncHandler(async (req, res) => {
 		user._id
 	);
 
-	const { password: pwd, refreshToken: rtkn, ...loggedInUser } = user;
+	const loggedInUser = await User.findById(user._id).select(
+		"-password -refreshToken"
+	);
 
 	const options = {
 		httpOnly: true,
